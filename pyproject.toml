@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ai-sudo"
+name = "agent-sudo"
 version = "0.1.0"
 description = "Identity and Access Management (IAM) for AI Agents. Stop hardcoding root API keys."
 readme = "README.md"
