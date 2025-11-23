@@ -7,7 +7,7 @@
 
 ## The Problem
 **The Enemy:** Hardcoded `.env` API keys (e.g., `STRIPE_SECRET_KEY`) shared by all agents.  
-**The Solution:** Stop hardcoding keys. Use `ai-sudo` to generate temporary, scoped keys in 1 line of Python.
+**The Solution:** Stop hardcoding keys. Use `ai-sudo` to enforce permissions and approval workflows in 1 line of Python.
 
 ## Installation
 
@@ -29,17 +29,53 @@ support_bot = Agent(
 ```
 
 ### 2. Protect your Tools (The "Sudo" Check)
+
+#### A. Basic Blocking
 ```python
 @sudo(scope="write:refunds")
 def process_refund(order_id):
-    # If the agent doesn't have "write:refunds", this raises PermissionDeniedError
+    # Raises PermissionDeniedError if scope is missing
     print(f"Processing refund for {order_id}")
 ```
 
-### 3. Run safely
+#### B. Audit Mode (Non-Blocking)
+Great for introducing AgentScope into existing production systems without breaking them.
+```python
+@sudo(scope="write:refunds", on_deny="log")
+def process_refund_audit(order_id):
+    # Logs a warning but ALLOWS execution
+    pass
+```
+
+#### C. Human-in-the-Loop (Callbacks)
+Require approval via Slack/Email before executing high-risk actions.
+```python
+def slack_approval(agent, scope, func, args, kwargs):
+    # Return True to allow, False to deny
+    return ask_slack_manager(f"Approve {agent.name} for {scope}?")
+
+@sudo(scope="write:refunds", on_deny=slack_approval)
+def process_refund_approved(order_id):
+    pass
+```
+
+### 3. Pydantic Integration (Advanced)
+Enforce scopes on your input schemas (ideal for LangChain/LlamaIndex).
+
+```python
+from ai_sudo.integrations import ScopedModel
+
+class RefundParams(ScopedModel):
+    _required_scope = "write:refunds"
+    order_id: str
+    amount: float
+
+# If initialized by an unauthorized agent, this raises PermissionDeniedError immediately.
+```
+
+### 4. Run safely
 ```python
 # Run code within the agent's session context
 with support_bot.start_session():
     process_refund("order_123")
 ```
-# ai-sudo
