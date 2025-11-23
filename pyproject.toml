@@ -15,6 +15,13 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest", "pydantic"]
 
 [project.urls]
 "Homepage" = "https://github.com/YOUR_USERNAME/ai-sudo"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

@@ -24,13 +24,13 @@ def sudo(scope: str, on_deny: Union[str, Callable] = "raise"):
             agent = get_current_agent()
 
             if not agent:
-                # For strict security, we block if no agent is present
+                # Strictly enforce agent session requirements
                 logger.warning(f"⚠️  BLOCK | Function '{func.__name__}' called outside an Agent Session.")
                 raise PermissionDeniedError("No active agent session found.")
 
             # 2. Check Permissions
             if agent.has_scope(scope):
-                # ✅ Authorized
+                # Authorized
                 logger.info(f"✅ ALLOW | Agent: {agent.name} -> Scopes: {scope} -> Func: {func.__name__}")
                 return func(*args, **kwargs)
             

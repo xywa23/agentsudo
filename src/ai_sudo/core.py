@@ -8,8 +8,7 @@ logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger("ai-sudo")
 
 # 1. The Context Variable
-# This is the magic that lets us know WHICH agent is running 
-# inside a function without passing the agent object as an argument.
+# Stores the current agent context for the executing thread.
 _current_agent_ctx = contextvars.ContextVar("current_agent", default=None)
 
 class Agent:
@@ -29,9 +28,8 @@ class Agent:
 
     def has_scope(self, required_scope: str) -> bool:
         """
-        Logic to check permissions. 
-        Start simple: Exact match. 
-        Future: 'read:*' wildcard matching.
+        Check if the agent has the required scope.
+        Currently supports exact string matching.
         """
         return required_scope in self.scopes
 

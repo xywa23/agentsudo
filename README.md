@@ -79,3 +79,23 @@ class RefundParams(ScopedModel):
 with support_bot.start_session():
     process_refund("order_123")
 ```
+
+## Development & Testing
+
+To contribute or run tests locally:
+
+1. **Install test dependencies:**
+   ```bash
+   pip install ".[test]"
+   ```
+
+2. **Run the test suite:**
+   ```bash
+   pytest
+   ```
+
+   This runs all unit tests in `tests/` covering:
+   - Core Identity & Context Management
+   - Blocking, Audit, and Callback modes
+   - Pydantic Integration
+
