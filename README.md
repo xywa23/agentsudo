@@ -1,7 +1,7 @@
 # 🛡️ agentsudo
 
 **Mission:** The "Sudo" command for AI Agents.  
-**One-Liner:** Open-source identity and permission management for non-human workers.
+**Objective:** Open-source identity and permission management for non-human workers.
 
 ---
 
