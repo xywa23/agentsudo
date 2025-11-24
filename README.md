@@ -1,4 +1,4 @@
-# 🛡️ AgentScope (ai-sudo)
+# 🛡️ agentsudo
 
 **Mission:** The "Sudo" command for AI Agents.  
 **One-Liner:** Open-source identity and permission management for non-human workers.
