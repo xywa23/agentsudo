@@ -231,8 +231,8 @@ with support_bot.start_session():
 ## Documentation
 
 - [Full Documentation](https://github.com/xywa23/agentsudo/wiki) _(coming soon)_
-- [Examples](https://github.com/xywa23/agentsudo/tree/main/examples) _(coming soon)_
-- [API Reference](https://github.com/xywa23/agentsudo/blob/main/docs/api.md) _(coming soon)_
+- [Examples](https://github.com/xywa23/agentsudo/tree/main/examples)
+- [API Reference](https://github.com/xywa23/agentsudo/blob/main/docs/api.md)
 
 ---
 
