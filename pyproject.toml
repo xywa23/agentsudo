@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-sudo"
+name = "agentsudo"
 version = "0.1.0"
 description = "Identity and Access Management (IAM) for AI Agents. Stop hardcoding root API keys."
 readme = "README.md"
@@ -21,7 +21,7 @@ dependencies = []
 test = ["pytest", "pydantic"]
 
 [project.urls]
-"Homepage" = "https://github.com/YOUR_USERNAME/ai-sudo"
+"Homepage" = "https://github.com/YOUR_USERNAME/agentsudo"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

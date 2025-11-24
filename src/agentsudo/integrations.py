@@ -1,5 +1,6 @@
 from typing import Optional, ClassVar
-from .core import get_current_agent, logger
+import logging
+from .core import get_current_agent, logger, _log_action
 from .guard import PermissionDeniedError
 
 try:
@@ -32,16 +33,24 @@ class ScopedModel(BaseModel):
 
         # 2. Identify Agent
         agent = get_current_agent()
+        model_name = self.__class__.__name__
         
         if not agent:
-            logger.warning(f"⚠️  BLOCK | ScopedModel '{self.__class__.__name__}' instantiated outside Agent Session.")
-            raise PermissionDeniedError("No active agent session found during model validation.")
+            logger.warning(f"BLOCK | ScopedModel '{model_name}' instantiated outside Agent Session.")
+            raise PermissionDeniedError(
+                f"ScopedModel '{model_name}' requires an active agent session. "
+                f"Use: with agent.start_session(): ..."
+            )
 
         # 3. Enforce Scope
         if not agent.has_scope(required_scope):
-            error_msg = f"Agent '{agent.name}' missing required scope: '{required_scope}' for model '{self.__class__.__name__}'"
-            logger.error(f"⛔ DENY  | {error_msg}")
+            error_msg = (
+                f"Agent '{agent.name}' missing required scope: '{required_scope}' for model '{model_name}'. "
+                f"Agent has: {list(agent.scopes)}."
+            )
+            
+            _log_action("model_access_denied", agent.id, agent.name, required_scope, model_name, False, level=logging.ERROR)
             raise PermissionDeniedError(error_msg)
             
-        logger.info(f"✅ ALLOW | Agent: {agent.name} -> Scopes: {required_scope} -> Model: {self.__class__.__name__}")
+        _log_action("model_access_granted", agent.id, agent.name, required_scope, model_name, True, level=logging.DEBUG)
         return self

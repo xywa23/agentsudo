@@ -1,8 +1,8 @@
 import pytest
-from ai_sudo import Agent, PermissionDeniedError
+from agentsudo import Agent, PermissionDeniedError
 
 try:
-    from ai_sudo.integrations import ScopedModel
+    from agentsudo.integrations import ScopedModel
     from pydantic import ValidationError
     HAS_PYDANTIC = True
 except ImportError:
@@ -28,10 +28,24 @@ def test_scoped_model_permission():
             SensitiveData(secret="top_secret")
 
 @pytest.mark.skipif(not HAS_PYDANTIC, reason="Pydantic not installed")
+def test_scoped_model_wildcard_permission():
+    """Test that wildcard scopes work on Models"""
+    class SensitiveData(ScopedModel):
+        _required_scope = "read:secret"
+        secret: str
+
+    # Agent has "read:*" which should match "read:secret"
+    agent_wildcard = Agent(name="SuperSpy", scopes=["read:*"])
+
+    with agent_wildcard.start_session():
+        model = SensitiveData(secret="top_secret")
+        assert model.secret == "top_secret"
+
+@pytest.mark.skipif(not HAS_PYDANTIC, reason="Pydantic not installed")
 def test_scoped_model_no_session():
     class SensitiveData(ScopedModel):
         _required_scope = "read:secret"
         secret: str
         
-    with pytest.raises(PermissionDeniedError, match="No active agent session"):
+    with pytest.raises(PermissionDeniedError, match="requires an active agent session"):
         SensitiveData(secret="fail")

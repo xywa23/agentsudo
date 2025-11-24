@@ -1,5 +1,5 @@
 import pytest
-from ai_sudo.core import Agent, get_current_agent
+from agentsudo.core import Agent, get_current_agent
 
 def test_agent_initialization():
     agent = Agent(name="TestBot", scopes=["read:db"])

@@ -1,5 +1,5 @@
 import pytest
-from ai_sudo import Agent, sudo, PermissionDeniedError
+from agentsudo import Agent, sudo, PermissionDeniedError
 
 # Fixtures
 @pytest.fixture
@@ -25,7 +25,7 @@ def write_audit_mode():
 
 # Tests
 def test_no_session_raises_error():
-    with pytest.raises(PermissionDeniedError, match="No active agent session"):
+    with pytest.raises(PermissionDeniedError, match="requires an active agent session"):
         read_database()
 
 def test_authorized_access(read_agent):
@@ -44,7 +44,7 @@ def test_audit_mode_allows_execution(read_agent):
 
 def test_callback_approval(read_agent):
     # Define a callback that approves everything
-    def always_yes(agent, scope, func, args, kwargs):
+    def always_yes(agent, scope, context):
         return True
         
     @sudo(scope="write:db", on_deny=always_yes)
@@ -56,7 +56,7 @@ def test_callback_approval(read_agent):
 
 def test_callback_denial(read_agent):
     # Define a callback that denies everything
-    def always_no(agent, scope, func, args, kwargs):
+    def always_no(agent, scope, context):
         return False
         
     @sudo(scope="write:db", on_deny=always_no)
