@@ -230,9 +230,9 @@ with support_bot.start_session():
 
 ## Documentation
 
-- [Full Documentation](https://github.com/xywa23/agentsudo/wiki) _(coming soon)_
+- [Full Documentation](https://agentsudo.vercel.app/docs)
+- [Getting Started Guide](https://agentsudo.vercel.app/docs/getting-started)
 - [Examples](https://github.com/xywa23/agentsudo/tree/main/examples)
-- [API Reference](https://github.com/xywa23/agentsudo/blob/main/docs/api.md)
 
 ---
 
