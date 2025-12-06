@@ -4,12 +4,77 @@ import uuid
 import time
 import fnmatch
 import json
-from typing import List, Optional, Set, Callable, Any
+import threading
+from typing import List, Optional, Set, Callable, Any, Dict
 from datetime import datetime
 
 # Setup local logging
 logging.basicConfig(level=logging.WARNING, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger("agentsudo")
+
+# Cloud telemetry configuration
+_cloud_config: Dict[str, Any] = {
+    "enabled": False,
+    "api_key": None,
+    "endpoint": "https://hosqsdopgfmfzxhjweyt.supabase.co/functions/v1/ingest-event",
+    "async_send": True,
+}
+
+def configure_cloud(api_key: str, async_send: bool = True):
+    """
+    Configure AgentSudo to send telemetry to the cloud dashboard.
+    
+    :param api_key: Your project API key from the AgentSudo dashboard
+    :param async_send: Send events asynchronously (default: True)
+    
+    Example:
+        import agentsudo
+        agentsudo.configure_cloud(api_key="as_your_api_key")
+    """
+    _cloud_config["enabled"] = True
+    _cloud_config["api_key"] = api_key
+    _cloud_config["async_send"] = async_send
+    logger.info("AgentSudo cloud telemetry enabled")
+
+def _send_cloud_event(event_data: dict):
+    """Send event to cloud dashboard."""
+    if not _cloud_config["enabled"] or not _cloud_config["api_key"]:
+        return
+    
+    def send():
+        try:
+            import urllib.request
+            import urllib.error
+            import ssl
+            
+            # Create SSL context that doesn't verify certificates (for macOS compatibility)
+            # In production, users should install certificates properly
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            
+            data = json.dumps(event_data).encode('utf-8')
+            req = urllib.request.Request(
+                _cloud_config["endpoint"],
+                data=data,
+                headers={
+                    "Content-Type": "application/json",
+                    "X-API-Key": _cloud_config["api_key"],
+                },
+                method="POST"
+            )
+            
+            with urllib.request.urlopen(req, timeout=5, context=ctx) as response:
+                if response.status != 200 and response.status != 201:
+                    logger.warning(f"Cloud telemetry failed: {response.status}")
+        except Exception as e:
+            logger.debug(f"Cloud telemetry error: {e}")
+    
+    if _cloud_config["async_send"]:
+        thread = threading.Thread(target=send, daemon=True)
+        thread.start()
+    else:
+        send()
 
 # 1. The Context Variable
 # Stores the current agent context for the executing thread.
@@ -29,6 +94,22 @@ def _log_action(action: str, agent_id: str, agent_name: str, scope: str, func_na
     
     # Log as JSON for programmatic parsing
     logger.log(level, json.dumps(log_entry))
+    
+    # Send to cloud dashboard if configured
+    if _cloud_config["enabled"]:
+        cloud_event = {
+            "agent_name": agent_name,
+            "action": "permission_check",
+            "scope": scope,
+            "allowed": allowed,
+            "function_name": func_name,
+            "metadata": {
+                "source": "sdk",
+                "action_type": action,
+                "sdk_agent_id": agent_id,  # Local SDK agent ID for correlation
+            }
+        }
+        _send_cloud_event(cloud_event)
 
 class Agent:
     def __init__(self, name: str, scopes: List[str], role: str = "worker", session_ttl: int = 3600):

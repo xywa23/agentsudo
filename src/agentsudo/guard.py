@@ -74,7 +74,7 @@ def sudo(scope: str, on_deny: Union[str, Callable] = "raise"):
 
             else:
                 # Default: Block and Raise
-                _log_action("access_denied", agent.id, agent.name, scope, func.__name__, False, level=logging.ERROR)
+                _log_action("access_denied", agent.id, agent.name, scope, func.__name__, False, level=logging.WARNING)
                 raise PermissionDeniedError(error_msg)
 
         return wrapper
