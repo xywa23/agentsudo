@@ -1,11 +1,22 @@
-# 🛡️ agentsudo
+# 🛡️ AgentSudo
 
-**The "sudo" command for AI agents.**
+**The permission layer for AI agents.**
 
 [![PyPI version](https://badge.fury.io/py/agentsudo.svg)](https://pypi.org/project/agentsudo/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
-Stop giving your AI agents root access to everything.
+> AgentSudo is a lightweight permission engine for AI agents. Enforce scopes, approvals, and safe tool use across LangChain, LlamaIndex, FastAPI, and custom agents.
+
+---
+
+## Why AgentSudo?
+
+AI agents are becoming powerful, but most run with **zero permission control**—they can call any tool, access any API, and do unexpected things.
+
+AgentSudo adds a lightweight, framework-agnostic permission engine that enforces **scopes**, **rate limits**, and **human approvals**. It works with LangChain, LlamaIndex, FastAPI, or plain Python with just a few lines of code.
+
+**Think of it as Auth0 for AI agents.**
 
 ---
 
@@ -144,7 +155,7 @@ def delete_customer(customer_id):
 
 ### 🎯 **Pydantic Integration**
 
-Enforce permissions on data models (perfect for LangChain/LlamaIndex):
+Enforce permissions on data models:
 ```python
 from agentsudo.integrations import ScopedModel
 
@@ -155,6 +166,40 @@ class RefundRequest(ScopedModel):
 
 # Raises PermissionDeniedError if agent lacks scope
 request = RefundRequest(order_id="123", amount=50.0)
+```
+
+### 🔌 **FastAPI Integration**
+
+Protect REST endpoints with agent-based permissions:
+```python
+from fastapi import FastAPI, Depends
+from agentsudo import Agent
+from agentsudo.adapters.fastapi import AgentSudoMiddleware, require_scope, register_agent
+
+app = FastAPI()
+
+# Register agents
+reader = Agent(name="ReaderBot", scopes=["read:*"])
+register_agent(reader, "reader-001")
+
+app.add_middleware(AgentSudoMiddleware, agent_header="X-Agent-ID")
+
+@app.get("/orders")
+async def get_orders(agent = Depends(require_scope("read:orders"))):
+    return {"orders": [...], "agent": agent.name}
+```
+
+### 🤖 **Works with Any AI Framework**
+
+The `@sudo` decorator works with LangChain, LlamaIndex, CrewAI, AutoGen, or any Python code:
+```python
+from langchain.tools import tool
+
+@tool
+@sudo(scope="read:data")
+def my_tool(query: str) -> str:
+    """Search data."""
+    return f"Results for {query}"
 ```
 
 ### ⏱️ **Session Expiry**
@@ -216,7 +261,7 @@ with support_bot.start_session():
 
 ---
 
-## Why AgentSudo?
+## Before vs After
 
 | Without AgentSudo | With AgentSudo |
 |-------------------|----------------|
@@ -238,12 +283,13 @@ with support_bot.start_session():
 
 ## Roadmap
 
+- [x] FastAPI adapter for REST APIs
 - [ ] Dashboard (cloud-hosted control plane)
 - [ ] Rate limiting per agent
 - [ ] Budget limits (cost controls)
 - [ ] Slack/Teams integration for approvals
+- [ ] Policy DSL (YAML-based allow/deny rules)
 - [ ] Pre-built integrations (Salesforce, Gmail, etc.)
-- [ ] Multi-agent orchestration
 
 ---
 
