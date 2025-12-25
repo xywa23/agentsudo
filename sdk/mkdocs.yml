@@ -1,0 +1,11 @@
+site_name: AI-Sudo
+theme:
+  name: material
+  palette: 
+    scheme: slate  # Dark mode by default (Devs love this)
+    primary: indigo
+repo_url: https://github.com/YOUR_USERNAME/ai-sudo
+nav:
+  - Home: index.md
+  - Usage: usage.md
+  - API Reference: api.md
