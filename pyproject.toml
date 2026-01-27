@@ -44,8 +44,8 @@ test = ["pytest", "pydantic>=2.0.0"]
 all = ["fastapi>=0.100.0", "starlette>=0.27.0", "pydantic>=2.0.0"]
 
 [project.urls]
-"Homepage" = "https://github.com/xywa23/agentsudo"
-"Documentation" = "https://agentsudo.vercel.app/docs"
+"Homepage" = "https://agentsudo.dev"
+"Documentation" = "https://agentsudo.dev/docs"
 "Repository" = "https://github.com/xywa23/agentsudo"
 "Bug Tracker" = "https://github.com/xywa23/agentsudo/issues"
 

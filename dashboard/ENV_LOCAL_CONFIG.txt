@@ -1,5 +1,0 @@
-# Copy this EXACT content into dashboard/.env.local
-
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_SUPABASE_URL=https://hosqsdopgfmfzxhjweyt.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhvc3FzZG9wZ2ZtZnp4aGp3ZXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3MjgwODYsImV4cCI6MjA4MDMwNDA4Nn0.SOLmscWb3P1IuHQ3YGmFgHLNCGRy0Zg6sHHLft7Hacw
