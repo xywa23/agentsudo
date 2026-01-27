@@ -8,6 +8,22 @@ class PermissionDeniedError(PermissionError):
     """Raised when an agent attempts an action without scope."""
     pass
 
+def _send_cloud_telemetry(agent_name: str, action: str, scope: str, function_name: str, allowed: bool):
+    """Send telemetry to cloud if configured (non-blocking)."""
+    try:
+        from .cloud import send_telemetry
+        send_telemetry(
+            agent_name=agent_name,
+            action=action,
+            scope=scope,
+            allowed=allowed,
+            function_name=function_name,
+        )
+    except ImportError:
+        pass  # Cloud module not available
+    except Exception:
+        pass  # Don't let telemetry errors affect the main flow
+
 def sudo(scope: str, on_deny: Union[str, Callable] = "raise"):
     """
     Decorator to enforce agent permissions.
@@ -41,6 +57,8 @@ def sudo(scope: str, on_deny: Union[str, Callable] = "raise"):
             if agent.has_scope(scope):
                 # Authorized - Log at DEBUG level (not to spam)
                 _log_action("access_granted", agent.id, agent.name, scope, func.__name__, True, level=logging.DEBUG)
+                # Send to cloud dashboard
+                _send_cloud_telemetry(agent.name, "permission_check", scope, func.__name__, True)
                 return func(*args, **kwargs)
             
             # 4. Handle Denial / Audit / Callback
@@ -52,6 +70,7 @@ def sudo(scope: str, on_deny: Union[str, Callable] = "raise"):
             if on_deny == "log":
                 # Audit Mode: Log violation but PROCEED
                 _log_action("audit_violation", agent.id, agent.name, scope, func.__name__, False, level=logging.WARNING)
+                _send_cloud_telemetry(agent.name, "audit_violation", scope, func.__name__, False)
                 return func(*args, **kwargs)
             
             elif callable(on_deny):
@@ -67,14 +86,17 @@ def sudo(scope: str, on_deny: Union[str, Callable] = "raise"):
                 
                 if allowed:
                     _log_action("callback_approved", agent.id, agent.name, scope, func.__name__, True, level=logging.INFO)
+                    _send_cloud_telemetry(agent.name, "callback_approved", scope, func.__name__, True)
                     return func(*args, **kwargs)
                 else:
                     _log_action("callback_denied", agent.id, agent.name, scope, func.__name__, False, level=logging.ERROR)
+                    _send_cloud_telemetry(agent.name, "callback_denied", scope, func.__name__, False)
                     raise PermissionDeniedError(f"Action rejected by approval policy: {scope}")
 
             else:
                 # Default: Block and Raise
                 _log_action("access_denied", agent.id, agent.name, scope, func.__name__, False, level=logging.ERROR)
+                _send_cloud_telemetry(agent.name, "permission_denied", scope, func.__name__, False)
                 raise PermissionDeniedError(error_msg)
 
         return wrapper
