@@ -36,15 +36,24 @@ def sudo(scope: str, on_deny: Union[str, Callable] = "raise"):
                                 Returns True to allow, False to deny.
     """
     def decorator(func):
-        @functools.wraps(func)
+        # Check if we're wrapping a LangChain tool - if so, wrap its underlying func
+        is_langchain_tool = hasattr(func, 'func') and hasattr(func, 'args_schema')
+        
+        if is_langchain_tool:
+            # Wrap the underlying function, not the tool object
+            original_func = func.func
+        else:
+            original_func = func
+        
+        @functools.wraps(original_func)
         def wrapper(*args, **kwargs):
             # 1. Identify the Agent
             agent = get_current_agent()
 
             if not agent:
-                logger.warning(f"BLOCK | Function '{func.__name__}' called outside an Agent Session.")
+                logger.warning(f"BLOCK | Function '{original_func.__name__}' called outside an Agent Session.")
                 raise PermissionDeniedError(
-                    f"Function '{func.__name__}' requires an active agent session. "
+                    f"Function '{original_func.__name__}' requires an active agent session. "
                     f"Use: with agent.start_session(): ..."
                 )
 
@@ -56,10 +65,10 @@ def sudo(scope: str, on_deny: Union[str, Callable] = "raise"):
             # 3. Check Permissions
             if agent.has_scope(scope):
                 # Authorized - Log at DEBUG level (not to spam)
-                _log_action("access_granted", agent.id, agent.name, scope, func.__name__, True, level=logging.DEBUG)
+                _log_action("access_granted", agent.id, agent.name, scope, original_func.__name__, True, level=logging.DEBUG)
                 # Send to cloud dashboard
-                _send_cloud_telemetry(agent.name, "permission_check", scope, func.__name__, True)
-                return func(*args, **kwargs)
+                _send_cloud_telemetry(agent.name, "permission_check", scope, original_func.__name__, True)
+                return original_func(*args, **kwargs)
             
             # 4. Handle Denial / Audit / Callback
             error_msg = (
@@ -69,15 +78,15 @@ def sudo(scope: str, on_deny: Union[str, Callable] = "raise"):
             
             if on_deny == "log":
                 # Audit Mode: Log violation but PROCEED
-                _log_action("audit_violation", agent.id, agent.name, scope, func.__name__, False, level=logging.WARNING)
-                _send_cloud_telemetry(agent.name, "audit_violation", scope, func.__name__, False)
-                return func(*args, **kwargs)
+                _log_action("audit_violation", agent.id, agent.name, scope, original_func.__name__, False, level=logging.WARNING)
+                _send_cloud_telemetry(agent.name, "audit_violation", scope, original_func.__name__, False)
+                return original_func(*args, **kwargs)
             
             elif callable(on_deny):
                 # Custom Callback
                 # Simplified context for the callback
                 context = {
-                    "function": func.__name__,
+                    "function": original_func.__name__,
                     "args": args,
                     "kwargs": kwargs
                 }
@@ -85,19 +94,24 @@ def sudo(scope: str, on_deny: Union[str, Callable] = "raise"):
                 allowed = on_deny(agent, scope, context)
                 
                 if allowed:
-                    _log_action("callback_approved", agent.id, agent.name, scope, func.__name__, True, level=logging.INFO)
-                    _send_cloud_telemetry(agent.name, "callback_approved", scope, func.__name__, True)
-                    return func(*args, **kwargs)
+                    _log_action("callback_approved", agent.id, agent.name, scope, original_func.__name__, True, level=logging.INFO)
+                    _send_cloud_telemetry(agent.name, "callback_approved", scope, original_func.__name__, True)
+                    return original_func(*args, **kwargs)
                 else:
-                    _log_action("callback_denied", agent.id, agent.name, scope, func.__name__, False, level=logging.ERROR)
-                    _send_cloud_telemetry(agent.name, "callback_denied", scope, func.__name__, False)
+                    _log_action("callback_denied", agent.id, agent.name, scope, original_func.__name__, False, level=logging.ERROR)
+                    _send_cloud_telemetry(agent.name, "callback_denied", scope, original_func.__name__, False)
                     raise PermissionDeniedError(f"Action rejected by approval policy: {scope}")
 
             else:
                 # Default: Block and Raise
-                _log_action("access_denied", agent.id, agent.name, scope, func.__name__, False, level=logging.ERROR)
-                _send_cloud_telemetry(agent.name, "permission_denied", scope, func.__name__, False)
+                _log_action("access_denied", agent.id, agent.name, scope, original_func.__name__, False, level=logging.ERROR)
+                _send_cloud_telemetry(agent.name, "permission_denied", scope, original_func.__name__, False)
                 raise PermissionDeniedError(error_msg)
 
+        # If wrapping a LangChain tool, replace its func with our wrapper and return the tool
+        if is_langchain_tool:
+            func.func = wrapper
+            return func
+        
         return wrapper
     return decorator
