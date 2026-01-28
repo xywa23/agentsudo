@@ -31,7 +31,14 @@ def _log_action(action: str, agent_id: str, agent_name: str, scope: str, func_na
     logger.log(level, json.dumps(log_entry))
 
 class Agent:
-    def __init__(self, name: str, scopes: List[str], role: str = "worker", session_ttl: int = 3600):
+    def __init__(
+        self, 
+        name: str, 
+        scopes: List[str], 
+        role: str = "worker", 
+        session_ttl: int = 3600,
+        guardrails: Optional[Any] = None,
+    ):
         self.id = str(uuid.uuid4())
         self.name = name
         self.scopes = set(scopes) # Use set for O(1) lookups
@@ -39,6 +46,7 @@ class Agent:
         self.session_ttl = session_ttl # seconds
         self.session_expires_at: Optional[float] = None
         self._token = None
+        self.guardrails = guardrails  # Optional Guardrails instance
 
     def start_session(self):
         """
