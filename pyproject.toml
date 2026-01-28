@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentsudo"
-version = "0.3.1"
+version = "0.3.2"
 description = "The permission layer for AI agents. Enforce scopes, approvals, and safe tool use across LangChain, LlamaIndex, FastAPI, and custom agents."
 readme = "README.md"
 authors = [{ name = "xywa23" }]
@@ -35,7 +35,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 requires-python = ">=3.9"
-dependencies = []
+dependencies = ["certifi>=2024.0.0"]
 
 [project.optional-dependencies]
 fastapi = ["fastapi>=0.100.0", "starlette>=0.27.0"]

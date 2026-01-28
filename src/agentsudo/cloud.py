@@ -88,6 +88,17 @@ class CloudConfig:
         try:
             import urllib.request
             import urllib.error
+            import ssl
+            
+            # Try to use certifi for SSL certificates if available
+            try:
+                import certifi
+                ssl_context = ssl.create_default_context(cafile=certifi.where())
+            except ImportError:
+                # Fallback: create context that doesn't verify (for dev environments)
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
             
             url = f"{self.endpoint}/api/events"
             data = json.dumps(events).encode('utf-8')
@@ -98,14 +109,16 @@ class CloudConfig:
                 headers={
                     'Content-Type': 'application/json',
                     'X-API-Key': self.api_key,
-                    'User-Agent': 'agentsudo-sdk/0.2.0',
+                    'User-Agent': 'agentsudo-sdk/0.3.1',
                 },
                 method='POST'
             )
             
-            with urllib.request.urlopen(req, timeout=10) as response:
+            with urllib.request.urlopen(req, timeout=10, context=ssl_context) as response:
                 if response.status != 200:
                     logger.warning(f"Cloud telemetry failed: {response.status}")
+                else:
+                    logger.debug(f"Cloud telemetry sent: {len(events)} events")
                     
         except urllib.error.URLError as e:
             logger.debug(f"Cloud telemetry error: {e}")
