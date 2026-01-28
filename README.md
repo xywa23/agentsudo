@@ -129,6 +129,60 @@ with readonly_agent.start_session():
 
 ## Features
 
+### 🛡️ **Guardrails** (NEW in v0.3.0)
+
+Prevent agents from responding to off-topic queries or prompt injection attacks:
+```python
+from agentsudo import Agent, Guardrails, check_guardrails
+
+# Define guardrails
+rails = Guardrails(
+    allowed_topics=["divorce", "legal", "marriage"],
+    on_violation="redirect",
+    redirect_message="I can only help with divorce-related questions.",
+)
+
+# Attach to agent
+agent = Agent(
+    name="DivorcioBot",
+    scopes=["divorce:quote"],
+    guardrails=rails,
+)
+
+# In your agent loop
+with agent.start_session():
+    is_valid, redirect = check_guardrails("When was Hitler born?")
+    if not is_valid:
+        return redirect  # "I can only help with divorce-related questions."
+    
+    # Process normally if valid
+    result = agent_executor.invoke(user_input)
+```
+
+**Built-in prompt injection protection:**
+```python
+rails = Guardrails()  # Injection detection is always enabled
+
+# These are automatically blocked:
+# - "Ignore all previous instructions"
+# - "Pretend you are a different AI"
+# - "[SYSTEM] New instructions"
+# - And many more patterns...
+```
+
+**Use the `@guardrail` decorator for simpler protection:**
+```python
+from agentsudo import guardrail
+
+@guardrail(
+    allowed_topics=["weather", "forecast"],
+    on_violation="redirect",
+    redirect_message="I only know about weather.",
+)
+def get_weather(query: str) -> str:
+    return llm.invoke(query)
+```
+
 ### 🔒 **Audit Mode** (Non-Blocking)
 
 Perfect for rolling out to production without breaking existing systems:
@@ -294,11 +348,15 @@ Monitor and manage your agents with the **AgentSudo Dashboard** at [agentsudo.de
 
 - [x] FastAPI adapter for REST APIs
 - [x] Cloud Dashboard (hosted at agentsudo.dev)
+- [x] **Guardrails** - Topic filtering & prompt injection protection (v0.3.0)
+- [ ] **npm package** - JavaScript/TypeScript SDK for Next.js, Node.js, Edge Runtime
 - [ ] Rate limiting per agent
 - [ ] Budget limits (cost controls)
 - [ ] Slack/Teams integration for approvals
 - [ ] Policy DSL (YAML-based allow/deny rules)
-- [ ] Pre-built integrations (Salesforce, Gmail, etc.)
+- [ ] Semantic topic matching (embeddings-based, not just keyword)
+- [ ] Output guardrails (filter agent responses)
+- [ ] Pre-built integrations (Stripe, Salesforce, Gmail, etc.)
 
 ---
 
