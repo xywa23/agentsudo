@@ -2,6 +2,7 @@ from .core import Agent, get_current_agent
 from .guard import sudo, PermissionDeniedError
 from .cloud import configure_cloud, send_telemetry, disable_cloud, get_cloud_config
 from .guardrails import Guardrails, GuardrailViolation, guardrail, check_guardrails
+from .slack import SlackApproval, SlackApprovalTimeout, create_slack_approval
 
 # FastAPI adapter (import only when needed)
 # Usage: from agentsudo.adapters.fastapi import AgentSudoMiddleware, require_scope
@@ -19,4 +20,7 @@ __all__ = [
     "GuardrailViolation",
     "guardrail",
     "check_guardrails",
+    "SlackApproval",
+    "SlackApprovalTimeout",
+    "create_slack_approval",
 ]

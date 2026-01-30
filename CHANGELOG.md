@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-01-30
+
+### Added
+- **Slack Integration** for human-in-the-loop approval workflows
+  - `SlackApproval` class for interactive Slack approvals
+  - `create_slack_approval()` convenience function
+  - Support for Slack Bot Token, Webhook, and AgentSudo Cloud modes
+  - Interactive approve/deny buttons in Slack messages
+  - Configurable timeout and auto-deny behavior
+  - `SlackApprovalTimeout` exception for timeout handling
+- New example: `examples/slack_approval.py`
+
 ## [0.3.2] - 2026-01-28
 
 ### Fixed

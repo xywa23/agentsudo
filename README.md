@@ -195,14 +195,18 @@ def update_record(record_id):
 
 ### 👤 **Human-in-the-Loop** (Approval Workflows)
 
-Require human approval for high-risk actions:
+Require human approval for high-risk actions via **Slack**:
 ```python
-def slack_approval(agent, scope, context):
-    # Send Slack message to manager
-    response = ask_slack(f"Approve {agent.name} for {scope}?")
-    return response == "yes"
+from agentsudo import sudo
+from agentsudo.slack import SlackApproval
 
-@sudo(scope="delete:customer", on_deny=slack_approval)
+slack = SlackApproval(
+    bot_token="xoxb-...",  # Or set SLACK_BOT_TOKEN env var
+    channel="#approvals",
+    timeout=300,  # 5 minutes
+)
+
+@sudo(scope="delete:customer", on_deny=slack.request_approval)
 def delete_customer(customer_id):
     print(f"Deleting customer {customer_id}")
 ```
